@@ -30,6 +30,7 @@ if (typeof authRoutes !== 'function' && !(authRoutes && authRoutes instanceof ex
 
 // Mount routes
 app.use('/api/auth', authRoutes);
+app.use('/api/courses', courseRoutes); 
 
 // Health check
 app.get('/', (req, res) => res.json({ message: 'CourseMaster API is running' }));
