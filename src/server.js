@@ -1,30 +1,42 @@
-// src/server.js (diagnostic version)
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 
 const connectDB = require('./config/db');
 
-// Replace these requires with your actual paths
-const authRoutes = require('./routes/authRoutes'); // adjust name if different
-const errorHandler = require('./middlewares/errorMiddleware.js'); // adjust if different
-const courseRoutes = require('./routes/courseRoutes.js'); // Add this
+const authRoutes = require('./routes/authRoutes');
+const errorHandler = require('./middlewares/errorMiddleware.js'); 
+const courseRoutes = require('./routes/courseRoutes.js');
 
 const app = express();
 connectDB();
 
-app.use(cors());
+// CORS Configuration
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://misun-task.netlify.app',
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// --- Diagnostic checks before mounting --- //
-console.log('TYPE authRoutes:', typeof authRoutes, authRoutes && Object.prototype.toString.call(authRoutes));
-console.log('TYPE errorHandler:', typeof errorHandler, errorHandler && Object.prototype.toString.call(errorHandler));
-
-// If authRoutes is not a function, throw a clearer error
 if (typeof authRoutes !== 'function' && !(authRoutes && authRoutes instanceof express.Router)) {
   console.error('ERROR: authRoutes is not a router/middleware function. Check src/routes/authRoutes.js export (should be module.exports = router).');
-  // Do not try to use it to avoid crash; exit with helpful message:
   process.exit(1);
 }
 
@@ -41,7 +53,6 @@ if (typeof errorHandler !== 'function') {
   process.exit(1);
 }
 
-// Global error handler (must be last)
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
